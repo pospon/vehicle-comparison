@@ -20,6 +20,7 @@
     --caravelle: #e6a817;
     --mercedes: #c0c0c0;
     --sharan: #d4573b;
+    --transporter: #9b59b6;
   }
 
   body {
@@ -106,6 +107,7 @@
   .card[data-vehicle="caravelle"]::before { background: var(--caravelle); }
   .card[data-vehicle="mercedes"]::before { background: var(--mercedes); }
   .card[data-vehicle="sharan"]::before { background: var(--sharan); }
+  .card[data-vehicle="transporter"]::before { background: var(--transporter); }
 
   .card-header {
     display: flex;
@@ -221,6 +223,7 @@
   .bar-fill[data-v="caravelle"] { background: var(--caravelle); }
   .bar-fill[data-v="mercedes"] { background: var(--mercedes); color: #1a1d27; }
   .bar-fill[data-v="sharan"] { background: var(--sharan); }
+  .bar-fill[data-v="transporter"] { background: var(--transporter); }
 
   /* === SILHOUETTE VIEW === */
   .silhouette-container {
@@ -260,6 +263,7 @@
   .sil-box[data-v="caravelle"] { border-color: var(--caravelle); background: rgba(230,168,23,0.15); }
   .sil-box[data-v="mercedes"] { border-color: var(--mercedes); background: rgba(192,192,192,0.12); }
   .sil-box[data-v="sharan"] { border-color: var(--sharan); background: rgba(212,87,59,0.15); }
+  .sil-box[data-v="transporter"] { border-color: var(--transporter); background: rgba(155,89,182,0.15); }
 
   .sil-name {
     font-size: 11px;
@@ -380,7 +384,8 @@
   .notes li:nth-child(1)::before { background: var(--sharan); }
   .notes li:nth-child(2)::before { background: var(--multivan); }
   .notes li:nth-child(3)::before { background: var(--caravelle); }
-  .notes li:nth-child(4)::before { background: var(--mercedes); }
+  .notes li:nth-child(4)::before { background: var(--transporter); }
+  .notes li:nth-child(5)::before { background: var(--mercedes); }
 
   .winner-tag {
     display: inline-block;
@@ -401,7 +406,7 @@
 
 <div class="header">
   <h1>AWD Vehicle Comparison — Short Versions</h1>
-  <p>Ford Tourneo Custom L1 &bull; VW Multivan T7 &bull; VW Caravelle T7 &bull; Mercedes V-Class Compact &bull; VW Sharan</p>
+  <p>Ford Tourneo Custom L1 &bull; VW Multivan T7 &bull; VW Caravelle T7 &bull; VW Transporter T7 Kombi &bull; Mercedes V-Class Compact &bull; VW Sharan</p>
 </div>
 
 <nav class="nav" id="nav">
@@ -418,6 +423,7 @@
     <div class="legend-item"><div class="legend-dot" style="background:var(--ford)"></div>Ford Tourneo Custom L1</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--multivan)"></div>VW Multivan T7</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--caravelle)"></div>VW Caravelle T7</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--transporter)"></div>VW Transporter T7 Kombi</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--mercedes)"></div>Mercedes V-Class Compact</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--sharan)"></div>VW Sharan</div>
   </div>
@@ -458,7 +464,7 @@
     <div class="chart-section">
       <div class="chart-title">Turning Circle Comparison <span class="unit">(kerb-to-kerb, metres)</span></div>
       <div class="turning-canvas-wrap">
-        <canvas id="turningCanvas" width="700" height="500"></canvas>
+        <canvas id="turningCanvas" width="700" height="540"></canvas>
       </div>
     </div>
   </div>
@@ -468,7 +474,8 @@
     <ul>
       <li>VW Sharan — production ended 2022/2023, no longer available new</li>
       <li>VW Multivan T7 — 4MOTION available only as eHybrid (1.5 TSI + electric, 245 PS)</li>
-      <li>VW Caravelle T7 — shares platform with Ford Tourneo Custom (joint VW/Ford development)</li>
+      <li>VW Caravelle T7 &amp; Transporter T7 Kombi — share platform with Ford Tourneo Custom (joint VW/Ford development)</li>
+      <li>VW Transporter Kombi — utility/commercial positioning, same dimensions as Caravelle</li>
       <li>Mercedes V-Class — lowest height (1 880 mm), fits in standard garages and parking structures</li>
     </ul>
   </div>
@@ -494,6 +501,12 @@ const vehicles = [
     note: 'Same platform as Ford Tourneo Custom',
     length: 5050, width: 2032, widthMirrors: 2275, height: 1990,
     wheelbase: 3100, turning: 11.9, groundClearance: null, cargo5: 2547
+  },
+  {
+    key: 'transporter', name: 'VW Transporter T7 Kombi SWB', badge: '4MOTION TDI',
+    note: 'Same platform as Caravelle/Tourneo, utility positioning',
+    length: 5050, width: 2032, widthMirrors: 2275, height: 1969,
+    wheelbase: 3100, turning: 11.8, groundClearance: null, cargo5: 2547
   },
   {
     key: 'mercedes', name: 'Mercedes V-Class Compact', badge: '4MATIC',
@@ -637,7 +650,7 @@ function renderCargo() {
 // SILHOUETTE
 function renderSilhouette() {
   const container = document.getElementById('silhouette');
-  const scale = 0.06;
+  const scale = 0.05;
 
   const frontHtml = vehicles.map(v => {
     const w = v.width * scale;
@@ -686,18 +699,18 @@ function drawTurning() {
   const dpr = window.devicePixelRatio || 1;
 
   canvas.width = 700 * dpr;
-  canvas.height = 500 * dpr;
+  canvas.height = 540 * dpr;
   canvas.style.width = '700px';
-  canvas.style.height = '500px';
+  canvas.style.height = '540px';
   ctx.scale(dpr, dpr);
 
   ctx.fillStyle = '#1a1d27';
-  ctx.fillRect(0, 0, 700, 500);
+  ctx.fillRect(0, 0, 700, 540);
 
   const cx = 350, cy = 260;
   const maxR = 11.9;
   const scale = 18;
-  const colors = { ford: '#1a6ddb', multivan: '#2eaa4f', caravelle: '#e6a817', mercedes: '#c0c0c0', sharan: '#d4573b' };
+  const colors = { ford: '#1a6ddb', multivan: '#2eaa4f', caravelle: '#e6a817', transporter: '#9b59b6', mercedes: '#c0c0c0', sharan: '#d4573b' };
 
   const sorted = [...vehicles].sort((a, b) => b.turning - a.turning);
 
@@ -717,7 +730,7 @@ function drawTurning() {
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    const angle = -Math.PI / 2 + (i * 0.35) - 0.35;
+    const angle = -Math.PI / 2 + (i * 0.3) - 0.45;
     const lx = cx + Math.cos(angle) * (r + 2);
     const ly = cy + Math.sin(angle) * (r + 2);
 
