@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWD Vehicle Comparison</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2e3340;
+    --text: #e4e6ed;
+    --text-dim: #8b8fa3;
+    --accent: #4a9eff;
+    --ford: #1a6ddb;
+    --multivan: #2eaa4f;
+    --caravelle: #e6a817;
+    --mercedes: #c0c0c0;
+    --sharan: #d4573b;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .header {
+    text-align: center;
+    padding: 32px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header p {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .nav {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .nav button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav button:hover { border-color: var(--accent); color: var(--text); }
+  .nav button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* === CARDS VIEW === */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .card[data-vehicle="ford"]::before { background: var(--ford); }
+  .card[data-vehicle="multivan"]::before { background: var(--multivan); }
+  .card[data-vehicle="caravelle"]::before { background: var(--caravelle); }
+  .card[data-vehicle="mercedes"]::before { background: var(--mercedes); }
+  .card[data-vehicle="sharan"]::before { background: var(--sharan); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .card-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .card-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    font-style: italic;
+  }
+  .card-specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .spec-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .spec-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .spec-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .spec-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-dim);
+  }
+  .spec-item.highlight {
+    border: 1px solid var(--accent);
+    background: rgba(74, 158, 255, 0.08);
+  }
+  .spec-item.highlight .spec-value { color: var(--accent); }
+
+  /* === BAR CHART === */
+  .chart-section {
+    margin-bottom: 32px;
+  }
+  .chart-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-title .unit {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .bar-group {
+    margin-bottom: 12px;
+  }
+  .bar-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .bar-track {
+    height: 32px;
+    background: var(--surface);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 60px;
+  }
+  .bar-fill[data-v="ford"] { background: var(--ford); }
+  .bar-fill[data-v="multivan"] { background: var(--multivan); }
+  .bar-fill[data-v="caravelle"] { background: var(--caravelle); }
+  .bar-fill[data-v="mercedes"] { background: var(--mercedes); color: #1a1d27; }
+  .bar-fill[data-v="sharan"] { background: var(--sharan); }
+
+  /* === SILHOUETTE VIEW === */
+  .silhouette-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .sil-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 20px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .sil-vehicle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+  .sil-box {
+    border: 2px solid;
+    border-radius: 8px 8px 4px 4px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+  }
+  .sil-box[data-v="ford"] { border-color: var(--ford); background: rgba(26,109,219,0.15); }
+  .sil-box[data-v="multivan"] { border-color: var(--multivan); background: rgba(46,170,79,0.15); }
+  .sil-box[data-v="caravelle"] { border-color: var(--caravelle); background: rgba(230,168,23,0.15); }
+  .sil-box[data-v="mercedes"] { border-color: var(--mercedes); background: rgba(192,192,192,0.12); }
+  .sil-box[data-v="sharan"] { border-color: var(--sharan); background: rgba(212,87,59,0.15); }
+
+  .sil-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+    text-align: center;
+    color: var(--text-dim);
+  }
+  .sil-dim {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    text-align: center;
+  }
+
+  .sil-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  /* === TURNING CIRCLE VIEW === */
+  .turning-canvas-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  .turning-canvas-wrap canvas {
+    max-width: 100%;
+  }
+
+  /* === TOGGLE === */
+  .toggle-group {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .toggle-group button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .toggle-group button:hover { border-color: var(--accent); color: var(--text); }
+  .toggle-group button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* === LEGEND === */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  /* === NOTES === */
+  .notes {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .notes h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .notes ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .notes li {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding-left: 16px;
+    position: relative;
+  }
+  .notes li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+  }
+  .notes li:nth-child(1)::before { background: var(--sharan); }
+  .notes li:nth-child(2)::before { background: var(--multivan); }
+  .notes li:nth-child(3)::before { background: var(--caravelle); }
+  .notes li:nth-child(4)::before { background: var(--mercedes); }
+
+  .winner-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(74, 158, 255, 0.2);
+    color: var(--accent);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AWD Vehicle Comparison — Short Versions</h1>
+  <p>Ford Tourneo Custom L1 &bull; VW Multivan T7 &bull; VW Caravelle T7 &bull; Mercedes V-Class Compact &bull; VW Sharan</p>
+</div>
+
+<nav class="nav" id="nav">
+  <button class="active" data-view="cards">Spec Cards</button>
+  <button data-view="dimensions">Dimensions</button>
+  <button data-view="silhouette">Size Comparison</button>
+  <button data-view="cargo">Cargo Volume</button>
+  <button data-view="turning">Turning Circle</button>
+</nav>
+
+<div class="content">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--ford)"></div>Ford Tourneo Custom L1</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--multivan)"></div>VW Multivan T7</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--caravelle)"></div>VW Caravelle T7</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--mercedes)"></div>Mercedes V-Class Compact</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sharan)"></div>VW Sharan</div>
+  </div>
+
+  <!-- CARDS VIEW -->
+  <div class="view active" id="view-cards">
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+  <!-- DIMENSIONS VIEW -->
+  <div class="view" id="view-dimensions">
+    <div class="toggle-group" id="dim-toggle">
+      <button class="active" data-dim="length">Length</button>
+      <button data-dim="width">Width</button>
+      <button data-dim="widthMirrors">Width (mirrors)</button>
+      <button data-dim="height">Height</button>
+      <button data-dim="wheelbase">Wheelbase</button>
+      <button data-dim="groundClearance">Ground Clearance</button>
+    </div>
+    <div id="dim-bars"></div>
+  </div>
+
+  <!-- SILHOUETTE VIEW -->
+  <div class="view" id="view-silhouette">
+    <div class="silhouette-container" id="silhouette"></div>
+  </div>
+
+  <!-- CARGO VIEW -->
+  <div class="view" id="view-cargo">
+    <div class="chart-section">
+      <div class="chart-title">Cargo Volume — 5-seat configuration <span class="unit">(litres)</span></div>
+      <div id="cargo-bars"></div>
+    </div>
+  </div>
+
+  <!-- TURNING VIEW -->
+  <div class="view" id="view-turning">
+    <div class="chart-section">
+      <div class="chart-title">Turning Circle Comparison <span class="unit">(kerb-to-kerb, metres)</span></div>
+      <div class="turning-canvas-wrap">
+        <canvas id="turningCanvas" width="700" height="500"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Key Notes</h3>
+    <ul>
+      <li>VW Sharan — production ended 2022/2023, no longer available new</li>
+      <li>VW Multivan T7 — 4MOTION available only as eHybrid (1.5 TSI + electric, 245 PS)</li>
+      <li>VW Caravelle T7 — shares platform with Ford Tourneo Custom (joint VW/Ford development)</li>
+      <li>Mercedes V-Class — lowest height (1 880 mm), fits in standard garages and parking structures</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const vehicles = [
+  {
+    key: 'ford', name: 'Ford Tourneo Custom L1', badge: 'AWD',
+    note: '2.0 EcoBlue 170 PS diesel',
+    length: 5010, width: 1986, widthMirrors: 2272, height: 1985,
+    wheelbase: 3100, turning: 10.9, groundClearance: 140, cargo5: 2547
+  },
+  {
+    key: 'multivan', name: 'VW Multivan T7 SWB', badge: '4MOTION eHybrid',
+    note: '4MOTION only as eHybrid (245 PS)',
+    length: 4973, width: 1941, widthMirrors: 2252, height: 1907,
+    wheelbase: 3124, turning: 11.5, groundClearance: 152, cargo5: 1844
+  },
+  {
+    key: 'caravelle', name: 'VW Caravelle T7 SWB', badge: '4MOTION TDI',
+    note: 'Same platform as Ford Tourneo Custom',
+    length: 5050, width: 2032, widthMirrors: 2275, height: 1990,
+    wheelbase: 3100, turning: 11.9, groundClearance: null, cargo5: 2547
+  },
+  {
+    key: 'mercedes', name: 'Mercedes V-Class Compact', badge: '4MATIC',
+    note: 'Lowest height — fits in garages',
+    length: 4895, width: 1928, widthMirrors: 2249, height: 1880,
+    wheelbase: 3200, turning: 11.8, groundClearance: 160, cargo5: 2400
+  },
+  {
+    key: 'sharan', name: 'VW Sharan', badge: '4MOTION — Discontinued',
+    note: 'Production ended 2022/2023',
+    length: 4854, width: 1904, widthMirrors: 2081, height: 1733,
+    wheelbase: 2920, turning: 11.6, groundClearance: null, cargo5: 711
+  }
+];
+
+const dimLabels = {
+  length: 'Length', width: 'Width (body)', widthMirrors: 'Width (mirrors)',
+  height: 'Height', wheelbase: 'Wheelbase', groundClearance: 'Ground Clearance'
+};
+const dimUnits = {
+  length: 'mm', width: 'mm', widthMirrors: 'mm',
+  height: 'mm', wheelbase: 'mm', groundClearance: 'mm'
+};
+
+let currentDim = 'length';
+
+// NAV
+document.getElementById('nav').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  if (btn.dataset.view === 'turning') drawTurning();
+  if (btn.dataset.view === 'silhouette') renderSilhouette();
+});
+
+// CARDS
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = vehicles.map(v => {
+    const specs = [
+      { label: 'Length', value: v.length, unit: 'mm' },
+      { label: 'Width', value: v.width, unit: 'mm' },
+      { label: 'Height', value: v.height, unit: 'mm', highlight: v.key === 'mercedes' },
+      { label: 'Wheelbase', value: v.wheelbase, unit: 'mm', highlight: v.key === 'mercedes' },
+      { label: 'Turning', value: v.turning, unit: 'm', highlight: v.key === 'ford' },
+      { label: 'Cargo 5-seat', value: v.cargo5, unit: 'l', highlight: v.key === 'ford' || v.key === 'caravelle' },
+      { label: 'Clearance', value: v.groundClearance || '—', unit: v.groundClearance ? 'mm' : '', highlight: v.key === 'mercedes' && v.groundClearance },
+      { label: 'Mirrors W.', value: v.widthMirrors, unit: 'mm' }
+    ];
+    return `
+      <div class="card" data-vehicle="${v.key}">
+        <div class="card-header">
+          <div class="card-name">${v.name}</div>
+          <div class="card-badge">${v.badge}</div>
+        </div>
+        <div class="card-note">${v.note}</div>
+        <div class="card-specs">
+          ${specs.map(s => `
+            <div class="spec-item${s.highlight ? ' highlight' : ''}">
+              <div class="spec-label">${s.label}</div>
+              <div class="spec-value">${typeof s.value === 'number' ? s.value.toLocaleString('cs-CZ') : s.value} <span class="spec-unit">${s.unit}</span></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// DIMENSION BARS
+function renderDimBars() {
+  const container = document.getElementById('dim-bars');
+  const vals = vehicles.map(v => v[currentDim]).filter(x => x != null);
+  const maxVal = Math.max(...vals);
+  const minVal = Math.min(...vals);
+
+  const sorted = [...vehicles]
+    .filter(v => v[currentDim] != null)
+    .sort((a, b) => b[currentDim] - a[currentDim]);
+
+  const missing = vehicles.filter(v => v[currentDim] == null);
+
+  container.innerHTML = `
+    <div class="chart-section">
+      <div class="chart-title">${dimLabels[currentDim]} <span class="unit">(${dimUnits[currentDim]})</span></div>
+      ${sorted.map((v, i) => {
+        const pct = ((v[currentDim] - minVal * 0.9) / (maxVal - minVal * 0.9)) * 100;
+        const best = i === 0 && currentDim !== 'turning';
+        const smallest = v[currentDim] === minVal && currentDim === 'turning';
+        return `
+        <div class="bar-group">
+          <div class="bar-label">
+            <span>${v.name}${best ? '<span class="winner-tag">Largest</span>' : ''}${smallest ? '<span class="winner-tag">Best</span>' : ''}</span>
+            <span>${v[currentDim].toLocaleString('cs-CZ')} ${dimUnits[currentDim]}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" data-v="${v.key}" style="width:${Math.max(pct, 12)}%">
+              ${v[currentDim].toLocaleString('cs-CZ')}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      ${missing.length ? `<p style="font-size:12px;color:var(--text-dim);margin-top:12px;">${missing.map(v => v.name).join(', ')}: data not available</p>` : ''}
+    </div>
+  `;
+}
+
+document.getElementById('dim-toggle').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#dim-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDim = btn.dataset.dim;
+  renderDimBars();
+});
+
+// CARGO BARS
+function renderCargo() {
+  const container = document.getElementById('cargo-bars');
+  const maxCargo = Math.max(...vehicles.map(v => v.cargo5));
+  const sorted = [...vehicles].sort((a, b) => b.cargo5 - a.cargo5);
+
+  container.innerHTML = sorted.map((v, i) => `
+    <div class="bar-group">
+      <div class="bar-label">
+        <span>${v.name}${i === 0 ? '<span class="winner-tag">Largest</span>' : ''}</span>
+        <span>${v.cargo5.toLocaleString('cs-CZ')} l</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" data-v="${v.key}" style="width:${(v.cargo5 / maxCargo) * 100}%">
+          ${v.cargo5.toLocaleString('cs-CZ')} l
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// SILHOUETTE
+function renderSilhouette() {
+  const container = document.getElementById('silhouette');
+  const scale = 0.06;
+
+  const frontHtml = vehicles.map(v => {
+    const w = v.width * scale;
+    const h = v.height * scale;
+    return `
+      <div class="sil-vehicle">
+        <div class="sil-box" data-v="${v.key}" style="width:${w}px;height:${h}px;">
+          ${v.width}&times;${v.height}
+        </div>
+        <div class="sil-name">${v.name.split(' ').slice(0, 2).join(' ')}</div>
+        <div class="sil-dim">${v.width} &times; ${v.height} mm</div>
+      </div>
+    `;
+  }).join('');
+
+  const sideHtml = vehicles.map(v => {
+    const l = v.length * scale;
+    const h = v.height * scale;
+    return `
+      <div class="sil-vehicle">
+        <div class="sil-box" data-v="${v.key}" style="width:${l}px;height:${h}px;">
+          ${v.length}&times;${v.height}
+        </div>
+        <div class="sil-name">${v.name.split(' ').slice(0, 2).join(' ')}</div>
+        <div class="sil-dim">${v.length} &times; ${v.height} mm</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div>
+      <div class="sil-section-title">Front View (width &times; height) — to scale</div>
+      <div class="sil-row" style="align-items:flex-end;">${frontHtml}</div>
+    </div>
+    <div>
+      <div class="sil-section-title">Side View (length &times; height) — to scale</div>
+      <div class="sil-row" style="align-items:flex-end;">${sideHtml}</div>
+    </div>
+  `;
+}
+
+// TURNING CIRCLE
+function drawTurning() {
+  const canvas = document.getElementById('turningCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = 700 * dpr;
+  canvas.height = 500 * dpr;
+  canvas.style.width = '700px';
+  canvas.style.height = '500px';
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = '#1a1d27';
+  ctx.fillRect(0, 0, 700, 500);
+
+  const cx = 350, cy = 260;
+  const maxR = 11.9;
+  const scale = 18;
+  const colors = { ford: '#1a6ddb', multivan: '#2eaa4f', caravelle: '#e6a817', mercedes: '#c0c0c0', sharan: '#d4573b' };
+
+  const sorted = [...vehicles].sort((a, b) => b.turning - a.turning);
+
+  sorted.forEach((v, i) => {
+    const r = v.turning * scale;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = colors[v.key];
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    ctx.fillStyle = colors[v.key];
+    ctx.globalAlpha = 0.06;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const angle = -Math.PI / 2 + (i * 0.35) - 0.35;
+    const lx = cx + Math.cos(angle) * (r + 2);
+    const ly = cy + Math.sin(angle) * (r + 2);
+
+    ctx.fillStyle = colors[v.key];
+    ctx.font = '600 12px -apple-system, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${v.name.split(' ').slice(0,2).join(' ')} — ${v.turning} m`, lx + 8, ly + 4);
+
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.fillStyle = '#8b8fa3';
+  ctx.font = '12px -apple-system, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Smaller circle = better maneuverability', cx, cy + maxR * scale + 40);
+
+  ctx.fillStyle = '#4a9eff';
+  ctx.font = '600 13px -apple-system, system-ui, sans-serif';
+  ctx.fillText('Best: Ford Tourneo Custom (10.9 m)', cx, cy + maxR * scale + 60);
+}
+
+// INIT
+renderCards();
+renderDimBars();
+renderCargo();
+renderSilhouette();
+</script>
+</body>
+</html>
