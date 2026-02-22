@@ -85,7 +85,7 @@
   /* === CARDS VIEW === */
   .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     gap: 16px;
   }
   .card {
@@ -387,6 +387,94 @@
   .notes li:nth-child(4)::before { background: var(--transporter); }
   .notes li:nth-child(5)::before { background: var(--mercedes); }
 
+  /* === TABLE VIEW === */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .data-table th {
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table .v-name {
+    font-weight: 700;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .data-table .v-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .data-table .best-cell {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .data-table .na { color: var(--text-dim); font-style: italic; }
+
+  .engine-list {
+    list-style: none;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .engine-list li {
+    padding: 6px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    color: var(--text);
+  }
+  .engine-list li .eng-power {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .price-range {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .price-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    margin-top: 8px;
+  }
+
+  .tow-icon { color: var(--accent); }
+
   .winner-tag {
     display: inline-block;
     font-size: 9px;
@@ -415,6 +503,8 @@
   <button data-view="silhouette">Size Comparison</button>
   <button data-view="cargo">Cargo Volume</button>
   <button data-view="turning">Turning Circle</button>
+  <button data-view="technical">Technical Data</button>
+  <button data-view="prices">Engines &amp; Prices</button>
 </nav>
 
 <div class="content">
@@ -469,6 +559,16 @@
     </div>
   </div>
 
+  <!-- TECHNICAL VIEW -->
+  <div class="view" id="view-technical">
+    <div id="technical-content"></div>
+  </div>
+
+  <!-- PRICES VIEW -->
+  <div class="view" id="view-prices">
+    <div id="prices-content"></div>
+  </div>
+
   <div class="notes">
     <h3>Key Notes</h3>
     <ul>
@@ -488,37 +588,92 @@ const vehicles = [
     key: 'ford', name: 'Ford Tourneo Custom L1', badge: 'AWD',
     note: '2.0 EcoBlue 170 PS diesel',
     length: 5010, width: 1986, widthMirrors: 2272, height: 1985,
-    wheelbase: 3100, turning: 10.9, groundClearance: 140, cargo5: 2547
+    wheelbase: 3100, turning: 10.9, groundClearance: 140, cargo5: 2547,
+    consumption: '8.6–9.0', consumptionNote: 'WLTP combined, diesel AWD',
+    towing: 2500, towbar: true, towbarNote: 'Retractable, factory option',
+    engines: [
+      { name: '2.0 EcoBlue', power: '136 PS', torque: '360 Nm', trans: '8-sp auto' },
+      { name: '2.0 EcoBlue', power: '170 PS', torque: '390 Nm', trans: '8-sp auto' }
+    ],
+    enginesNote: 'AWD only with diesel + automatic',
+    priceCZK: '~1 200 000', priceEUR: '~48 000–53 000',
+    priceNote: 'Titanium L1 AWD (CZK after discount)'
   },
   {
     key: 'multivan', name: 'VW Multivan T7 SWB', badge: '4MOTION eHybrid',
     note: '4MOTION only as eHybrid (245 PS)',
     length: 4973, width: 1941, widthMirrors: 2252, height: 1907,
-    wheelbase: 3124, turning: 11.5, groundClearance: 152, cargo5: 1844
+    wheelbase: 3124, turning: 11.5, groundClearance: 152, cargo5: 1844,
+    consumption: '0.8 (PHEV)', consumptionNote: 'WLTP weighted; ~5–6 l real-world (empty battery)',
+    electricRange: '92–95 km',
+    towing: 1600, towbar: true, towbarNote: 'Electric swivelling, factory option',
+    engines: [
+      { name: '1.5 TSI eHybrid', power: '245 PS', torque: '350 Nm', trans: '6-sp DSG' }
+    ],
+    enginesNote: '4MOTION only with eHybrid (no diesel AWD)',
+    priceCZK: '~1 600 000', priceEUR: '~70 000–85 000',
+    priceNote: 'eHybrid 4MOTION Life/Style'
   },
   {
     key: 'caravelle', name: 'VW Caravelle T7 SWB', badge: '4MOTION TDI',
     note: 'Same platform as Ford Tourneo Custom',
     length: 5050, width: 2032, widthMirrors: 2275, height: 1990,
-    wheelbase: 3100, turning: 11.9, groundClearance: null, cargo5: 2547
+    wheelbase: 3100, turning: 11.9, groundClearance: null, cargo5: 2547,
+    consumption: '8.6–8.7', consumptionNote: 'WLTP combined, diesel 4MOTION',
+    towing: 2400, towbar: true, towbarNote: 'Electric retractable, factory option',
+    engines: [
+      { name: '2.0 TDI', power: '150 PS', torque: '360 Nm', trans: '8-sp DSG' },
+      { name: '2.0 TDI BiTurbo', power: '170 PS', torque: '390 Nm', trans: '8-sp DSG' }
+    ],
+    enginesNote: '4MOTION only with diesel + DSG automatic',
+    priceCZK: '~1 300 000–1 700 000', priceEUR: '~48 000–62 000',
+    priceNote: 'Base to PanAmericana 4MOTION'
   },
   {
     key: 'transporter', name: 'VW Transporter T7 Kombi SWB', badge: '4MOTION TDI',
     note: 'Same platform as Caravelle/Tourneo, utility positioning',
     length: 5050, width: 2032, widthMirrors: 2275, height: 1969,
-    wheelbase: 3100, turning: 11.8, groundClearance: null, cargo5: 2547
+    wheelbase: 3100, turning: 11.8, groundClearance: null, cargo5: 2547,
+    consumption: '8.3', consumptionNote: 'WLTP combined, diesel 4MOTION',
+    towing: 2800, towbar: true, towbarNote: 'Detachable/swivelling, factory option',
+    engines: [
+      { name: '2.0 TDI', power: '150 PS', torque: '360 Nm', trans: '8-sp DSG' },
+      { name: '2.0 TDI', power: '170 PS', torque: '390 Nm', trans: '8-sp DSG' }
+    ],
+    enginesNote: '4MOTION only with 150/170 PS diesel + DSG',
+    priceCZK: '~1 100 000–1 500 000', priceEUR: '~55 000–65 000',
+    priceNote: 'Kombi 4MOTION DSG'
   },
   {
     key: 'mercedes', name: 'Mercedes V-Class Compact', badge: '4MATIC',
     note: 'Lowest height — fits in garages',
     length: 4895, width: 1928, widthMirrors: 2249, height: 1880,
-    wheelbase: 3200, turning: 11.8, groundClearance: 160, cargo5: 2400
+    wheelbase: 3200, turning: 11.8, groundClearance: 160, cargo5: 2400,
+    consumption: '7.0–8.1', consumptionNote: 'WLTP combined, diesel 4MATIC',
+    towing: 2000, towbar: true, towbarNote: 'Detachable ball head, factory option',
+    engines: [
+      { name: '2.0 TDI (V 220 d)', power: '163 PS', torque: '380 Nm', trans: '9G-TRONIC' },
+      { name: '2.0 TDI (V 250 d)', power: '190 PS', torque: '440 Nm', trans: '9G-TRONIC' },
+      { name: '2.0 TDI (V 300 d)', power: '237 PS', torque: '500 Nm', trans: '9G-TRONIC' }
+    ],
+    enginesNote: '4MATIC only with diesel, 3 power levels',
+    priceCZK: '~1 700 000–2 000 000+', priceEUR: '~65 000–96 000',
+    priceNote: 'Compact 4MATIC Style to Exclusive'
   },
   {
     key: 'sharan', name: 'VW Sharan', badge: '4MOTION — Discontinued',
     note: 'Production ended 2022/2023',
     length: 4854, width: 1904, widthMirrors: 2081, height: 1733,
-    wheelbase: 2920, turning: 11.6, groundClearance: null, cargo5: 711
+    wheelbase: 2920, turning: 11.6, groundClearance: null, cargo5: 711,
+    consumption: '7.3–7.5', consumptionNote: 'WLTP combined, diesel 4MOTION',
+    towing: 2400, towbar: true, towbarNote: 'Swivelling, factory option',
+    engines: [
+      { name: '2.0 TDI', power: '150 PS', torque: '340 Nm', trans: '6-sp manual' },
+      { name: '2.0 TDI', power: '184 PS', torque: '380 Nm', trans: '7-sp DSG' }
+    ],
+    enginesNote: '4MOTION only with diesel',
+    priceCZK: '~700 000–900 000', priceEUR: '~26 000–34 000',
+    priceNote: 'Used market 2019–2022, low mileage'
   }
 ];
 
@@ -543,6 +698,8 @@ document.getElementById('nav').addEventListener('click', e => {
   document.getElementById('view-' + btn.dataset.view).classList.add('active');
   if (btn.dataset.view === 'turning') drawTurning();
   if (btn.dataset.view === 'silhouette') renderSilhouette();
+  if (btn.dataset.view === 'technical') renderTechnical();
+  if (btn.dataset.view === 'prices') renderPrices();
 });
 
 // CARDS
@@ -556,8 +713,10 @@ function renderCards() {
       { label: 'Wheelbase', value: v.wheelbase, unit: 'mm', highlight: v.key === 'mercedes' },
       { label: 'Turning', value: v.turning, unit: 'm', highlight: v.key === 'ford' },
       { label: 'Cargo 5-seat', value: v.cargo5, unit: 'l', highlight: v.key === 'ford' || v.key === 'caravelle' },
+      { label: 'Consumption', value: v.consumption, unit: 'l/100km' },
+      { label: 'Towing', value: v.towing.toLocaleString('cs-CZ'), unit: 'kg', highlight: v.key === 'transporter' },
       { label: 'Clearance', value: v.groundClearance || '—', unit: v.groundClearance ? 'mm' : '', highlight: v.key === 'mercedes' && v.groundClearance },
-      { label: 'Mirrors W.', value: v.widthMirrors, unit: 'mm' }
+      { label: 'Price CZK', value: v.priceCZK, unit: '' }
     ];
     return `
       <div class="card" data-vehicle="${v.key}">
@@ -752,6 +911,148 @@ function drawTurning() {
   ctx.fillStyle = '#4a9eff';
   ctx.font = '600 13px -apple-system, system-ui, sans-serif';
   ctx.fillText('Best: Ford Tourneo Custom (10.9 m)', cx, cy + maxR * scale + 60);
+}
+
+// TECHNICAL DATA TABLE
+function renderTechnical() {
+  const container = document.getElementById('technical-content');
+  const bestConsumption = vehicles
+    .filter(v => !v.electricRange)
+    .reduce((best, v) => {
+      const low = parseFloat(v.consumption);
+      return low < best ? low : best;
+    }, Infinity);
+  const bestTowing = Math.max(...vehicles.map(v => v.towing));
+
+  container.innerHTML = `
+    <h3 class="section-title">Fuel Consumption &amp; Towing</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>Consumption (l/100km)</th>
+          <th>Towing Capacity</th>
+          <th>Towbar</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vehicles.map(v => {
+          const lowVal = parseFloat(v.consumption);
+          const isBestCons = !v.electricRange && lowVal <= bestConsumption;
+          const isBestTow = v.towing === bestTowing;
+          return `
+          <tr>
+            <td>
+              <div class="v-name">
+                <span class="v-dot" style="background:var(--${v.key})"></span>
+                ${v.name}
+              </div>
+            </td>
+            <td class="${isBestCons ? 'best-cell' : ''}">
+              ${v.consumption} l/100km${v.electricRange ? ' (PHEV)' : ''}
+              ${v.electricRange ? `<br><span style="font-size:11px;color:var(--text-dim)">EV range: ${v.electricRange}</span>` : ''}
+              ${isBestCons ? '<span class="winner-tag">Best</span>' : ''}
+              <br><span style="font-size:11px;color:var(--text-dim)">${v.consumptionNote}</span>
+            </td>
+            <td class="${isBestTow ? 'best-cell' : ''}">
+              ${v.towing.toLocaleString('cs-CZ')} kg
+              ${isBestTow ? '<span class="winner-tag">Best</span>' : ''}
+            </td>
+            <td>
+              ${v.towbar ? '<span class="tow-icon">&#x2713;</span> Yes' : '<span class="na">No</span>'}
+              <br><span style="font-size:11px;color:var(--text-dim)">${v.towbarNote}</span>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Towing Capacity Comparison</h3>
+    ${(() => {
+      const sorted = [...vehicles].sort((a, b) => b.towing - a.towing);
+      const maxTow = sorted[0].towing;
+      return sorted.map((v, i) => `
+        <div class="bar-group">
+          <div class="bar-label">
+            <span>${v.name}${i === 0 ? '<span class="winner-tag">Best</span>' : ''}</span>
+            <span>${v.towing.toLocaleString('cs-CZ')} kg</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" data-v="${v.key}" style="width:${(v.towing / maxTow) * 100}%">
+              ${v.towing.toLocaleString('cs-CZ')} kg
+            </div>
+          </div>
+        </div>
+      `).join('');
+    })()}
+  `;
+}
+
+// ENGINES & PRICES
+function renderPrices() {
+  const container = document.getElementById('prices-content');
+
+  container.innerHTML = `
+    <h3 class="section-title">Available Engines (AWD/4MOTION variants)</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>Engine Options</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vehicles.map(v => `
+          <tr>
+            <td>
+              <div class="v-name">
+                <span class="v-dot" style="background:var(--${v.key})"></span>
+                ${v.name}
+              </div>
+            </td>
+            <td>
+              <ul class="engine-list">
+                ${v.engines.map(e => `
+                  <li>
+                    ${e.name} — <span class="eng-power">${e.power}</span> / ${e.torque}, ${e.trans}
+                  </li>
+                `).join('')}
+              </ul>
+            </td>
+            <td style="font-size:12px;color:var(--text-dim)">${v.enginesNote}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <h3 class="section-title">Approximate Pricing</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>Price (CZK)</th>
+          <th>Price (EUR)</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vehicles.map(v => `
+          <tr>
+            <td>
+              <div class="v-name">
+                <span class="v-dot" style="background:var(--${v.key})"></span>
+                ${v.name}
+              </div>
+            </td>
+            <td><span class="price-range">${v.priceCZK}</span></td>
+            <td><span class="price-range">${v.priceEUR}</span></td>
+            <td><span class="price-detail">${v.priceNote}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 // INIT
